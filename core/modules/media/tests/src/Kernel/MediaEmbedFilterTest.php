@@ -3,8 +3,7 @@
 namespace Drupal\Tests\media\Kernel;
 
 use Drupal\filter\FilterPluginCollection;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\media\Entity\Media;
 
 /**
  * Tests the media content input filter.
@@ -26,20 +25,6 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
   public static $modules = ['filter'];
 
   /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -49,6 +34,9 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
     $this->filters = $bag->getAll();
   }
 
+  /**
+   * Tests the media embed filter.
+   */
   public function testMediaEmbedFilter() {
     $filter = $this->filters['media_embed'];
 
@@ -56,20 +44,24 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
       return $filter->process($input, 'und');
     };
 
-    // Create media type, media entity, and rendered entity.
-    $mediaType = $this->createMediaType('image');
-    $media = $this->generateMedia('test.patch', $mediaType);
-    $data_entity_uuid = $media->uuid();
-    $build = $this->entityTypeManager->getViewBuilder($media->getEntityTypeId())->view($media, 'default');
-    $rendered_media = $this->renderer->render($build);
+    // Create media entity.
+    $media = Media::create(['bundle' => $this->testMediaType->id()]);
+    $media->save();
+    $media_uuid = $media->uuid();
+
+    // Render entity.
+    $build = entity_view($media, 'default', 'und');
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
+    $renderer = \Drupal::service('renderer');
+    $rendered_media = $renderer->renderPlain($build);
 
     // Test data-entity-embed-display attribute.
-    $input = '<drupal-entity data-entity-type="image" data-entity-embed-display="view_mode:image.default" data-entity-uuid="' . $data_entity_uuid . '"></drupal-entity>';
+    $input = '<drupal-entity data-entity-type="image" data-entity-embed-display="view_mode:image.default" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
 
     // Test data-view-mode attribute.
-    $input = '<drupal-entity data-entity-type="image" data-view-mode="default" data-entity-uuid="' . $data_entity_uuid . '"></drupal-entity>';
+    $input = '<drupal-entity data-entity-type="image" data-view-mode="default" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
   }
