@@ -11,7 +11,6 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\embed\DomHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\media\Exception\MediaNotFoundException;
 use Drupal\media\Exception\RecursiveRenderingException;
@@ -27,8 +26,6 @@ use Drupal\media\Exception\RecursiveRenderingException;
  * )
  */
 class MediaEmbedFilter extends FilterBase implements ContainerFactoryPluginInterface {
-
-  use DomHelperTrait;
 
   /**
    * The renderer service.
@@ -218,6 +215,34 @@ class MediaEmbedFilter extends FilterBase implements ContainerFactoryPluginInter
     $build['#access'] = $entity->access('view', NULL, TRUE);
 
     return $build;
+  }
+
+  /**
+   * Replace the contents of a DOMNode.
+   *
+   * @param \DOMNode $node
+   *   A DOMNode object.
+   * @param string $content
+   *   The text or HTML that will replace the contents of $node.
+   */
+  protected function replaceNodeContent(\DOMNode &$node, $content) {
+    if (strlen($content)) {
+      // Load the content into a new DOMDocument and retrieve the DOM nodes.
+      $replacement_nodes = Html::load($content)->getElementsByTagName('body')
+        ->item(0)
+        ->childNodes;
+    }
+    else {
+      $replacement_nodes = [$node->ownerDocument->createTextNode('')];
+    }
+
+    foreach ($replacement_nodes as $replacement_node) {
+      // Import the replacement node from the new DOMDocument into the original
+      // one, importing also the child nodes of the replacement node.
+      $replacement_node = $node->ownerDocument->importNode($replacement_node, TRUE);
+      $node->parentNode->insertBefore($replacement_node, $node);
+    }
+    $node->parentNode->removeChild($node);
   }
 
   /**
