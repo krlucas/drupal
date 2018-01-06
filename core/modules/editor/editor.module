@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\editor\Entity\Editor;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -16,6 +17,8 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\filter\FilterFormatInterface;
 use Drupal\filter\Plugin\FilterInterface;
+use Drupal\media\Entity\Media;
+use Drupal\media\Entity\MediaType;
 
 /**
  * Implements hook_help().
@@ -250,6 +253,56 @@ function editor_form_filter_admin_format_submit($form, FormStateInterface $form_
     }
     $editor->save();
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function editor_form_media_type_add_form_alter(&$form, &$form_state, $form_id) {
+  // Add this submit function to the submit _button_ rather than the form's
+  // '#submit' array, because the latter approach loses our submit function when
+  // the form is refreshed via ajax (e.g. when you have to choose a source field
+  // for your media type).
+  $form['actions']['submit']['#submit'][] = '_editor_add_media_embed_display';
+}
+
+/**
+ * A submit function added to the form that adds a media type. This will create
+ * a form display, containing only this media type's required fields, to be used
+ * when a user embeds media in the editor.
+ *
+ * @param array $form
+ *  The media-type-addition form.
+ *
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *  That form's state.
+ *
+ * @internal
+ */
+function _editor_add_media_embed_display(array &$form, FormStateInterface $form_state) {
+  $entity_type = 'media';
+  $bundle = $form_state->getValue('id');
+  $form_mode = 'editor_embed';
+
+  // Create and enable the form display for this new media type, using the
+  // editor_embed form mode created during Editor module install.
+  $form_display = entity_get_form_display($entity_type, $bundle, $form_mode);
+
+  // Show only the required fields; hide all others.
+  /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
+  foreach (\Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type, $bundle) as $field_definition) {
+    $field_name = $field_definition->getName();
+    if ($field_definition->isRequired()) {
+      $form_display->setComponent($field_name, []);
+    }
+    else {
+      $form_display->removeComponent($field_name);
+    }
+  }
+
+  // Enable and save the cleaned-up form display.
+  $form_display->set('status', TRUE);
+  $form_display->save();
 }
 
 /**
