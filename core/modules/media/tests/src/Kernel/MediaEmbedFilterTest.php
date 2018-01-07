@@ -38,8 +38,10 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
    * Tests the media embed filter.
    */
   public function testMediaEmbedFilter() {
+    // Get media embed filter.
     $filter = $this->filters['media_embed'];
 
+    // Create test function.
     $test = function ($input) use ($filter) {
       return $filter->process($input, 'und');
     };
@@ -50,18 +52,20 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
     $media_uuid = $media->uuid();
 
     // Render entity.
-    $build = entity_view($media, 'default', 'und');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $view_builder */
+    $view_builder = \Drupal::entityTypeManager();
+    $build = $view_builder->getViewBuilder($media->getEntityTypeId())->view($media);
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
-    $rendered_media = $renderer->renderPlain($build);
+    $rendered_media = $renderer->renderPlain($build)->__toString();
 
-    // Test data-entity-embed-display attribute.
-    $input = '<drupal-entity data-entity-type="image" data-entity-embed-display="view_mode:image.default" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
+    // Test filter using data-entity-embed-display attribute.
+    $input = '<drupal-entity data-entity-type="image" data-entity-embed-display="view_mode:image.full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
 
-    // Test data-view-mode attribute.
-    $input = '<drupal-entity data-entity-type="image" data-view-mode="default" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
+    // Test filter using data-view-mode attribute.
+    $input = '<drupal-entity data-entity-type="image" data-view-mode="full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
   }
