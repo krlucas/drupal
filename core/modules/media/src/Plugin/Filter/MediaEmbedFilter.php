@@ -246,6 +246,35 @@ class MediaEmbedFilter extends FilterBase implements ContainerFactoryPluginInter
   }
 
   /**
+   * Convert the attributes on a DOMNode object to an array.
+   *
+   * This will also un-serialize any attribute values stored as JSON.
+   *
+   * @param \DOMNode $node
+   *   A DOMNode object.
+   *
+   * @return array
+   *   The attributes as an associative array, keyed by the attribute names.
+   */
+  public function getNodeAttributesAsArray(\DOMNode $node) {
+    $return = [];
+
+    // Convert the data attributes to the context array.
+    foreach ($node->attributes as $attribute) {
+      $key = $attribute->nodeName;
+      $return[$key] = $attribute->nodeValue;
+
+      // Check for JSON-encoded attributes.
+      $data = json_decode($return[$key], TRUE, 10);
+      if ($data !== NULL && json_last_error() === JSON_ERROR_NONE) {
+        $return[$key] = $data;
+      }
+    }
+
+    return $return;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function tips($long = FALSE) {
