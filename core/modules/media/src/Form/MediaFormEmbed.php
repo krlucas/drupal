@@ -12,6 +12,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\editor\Ajax\EditorDialogSave;
 use Drupal\media\MediaForm;
 
+/**
+ * Form controller for the media embed add/edit forms.
+ *
+ * @internal
+ */
 class MediaFormEmbed extends MediaForm {
 
   /**
@@ -19,11 +24,12 @@ class MediaFormEmbed extends MediaForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+    $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'editor/drupal.editor.dialog';
     $form['#ajax'] = [
       'callback' => '::ajaxFormRebuild',
     ];
-    $form['#prefix'] = '<div id="entity-embed-dialog-form">';
+    $form['#prefix'] = '<div id="media-embed-dialog-form">';
     $form['#suffix'] = '</div>';
     return $form;
   }
@@ -42,30 +48,22 @@ class MediaFormEmbed extends MediaForm {
         '#type' => 'status_messages',
         '#weight' => -10,
       );
-      $response->addCommand(new HtmlCommand('#entity-embed-dialog-form', $form));
+      $response->addCommand(new HtmlCommand('#media-embed-dialog-form', $form));
     }
     else {
-      // Serialize entity embed settings to JSON string.
-
+      // Embed the entity element in the editor and close the dialog.
       $values = $form_state->getValues();
-
       $values['attributes'] = [
         'data-embed-button' => 'media',
         'data-entity-embed-display' => 'view_mode:media.full',
         'data-entity-type' => 'media',
         'data-entity-uuid' => $this->getEntity()->uuid(),
       ];
-      if (!empty($values['attributes']['data-entity-embed-display-settings'])) {
-        $values['attributes']['data-entity-embed-display-settings'] = Json::encode($values['attributes']['data-entity-embed-display-settings']);
-      }
 
       // Filter out empty attributes.
       $values['attributes'] = array_filter($values['attributes'], function($value) {
         return (bool) Unicode::strlen((string) $value);
       });
-
-      // Allow other modules to alter the values before getting submitted to the WYSIWYG.
-      $this->moduleHandler->alter('entity_embed_values', $values, $entity, $display, $form_state);
 
       $response->addCommand(new EditorDialogSave($values));
       $response->addCommand(new CloseModalDialogCommand());
@@ -74,28 +72,9 @@ class MediaFormEmbed extends MediaForm {
     return $response;
   }
 
-   /**
+  /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
-    $saved = parent::save($form, $form_state);
-    $context = ['@type' => $this->entity->bundle(), '%label' => $this->entity->label()];
-    $logger = $this->logger('media');
-    $t_args = ['@type' => $this->entity->bundle->entity->label(), '%label' => $this->entity->label()];
-
-    if ($saved === SAVED_NEW) {
-      $logger->notice('@type: added %label.', $context);
-      drupal_set_message($this->t('@type %label has been created.', $t_args));
-    }
-    else {
-      $logger->notice('@type: updated %label.', $context);
-      drupal_set_message($this->t('@type %label has been updated.', $t_args));
-    }
-
-    // $form_state->setRedirectUrl($this->entity->toUrl('canonical'));
-    return $saved;
-  }
-  
   public function actionsElement(array $form, FormStateInterface $form_state) {
     $element = parent::actionsElement($form, $form_state);
     $element['submit']['#ajax'] = [
