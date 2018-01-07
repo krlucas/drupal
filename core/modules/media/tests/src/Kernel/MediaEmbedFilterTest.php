@@ -60,12 +60,12 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
     $rendered_media = $renderer->renderPlain($build)->__toString();
 
     // Test filter using data-entity-embed-display attribute.
-    $input = '<drupal-entity data-entity-type="image" data-entity-embed-display="view_mode:image.full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
+    $input = '<drupal-entity data-entity-type="media" data-entity-embed-display="view_mode:image.full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
 
     // Test filter using data-view-mode attribute.
-    $input = '<drupal-entity data-entity-type="image" data-view-mode="full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
+    $input = '<drupal-entity data-entity-type="media" data-view-mode="full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
     $expected = $rendered_media;
     $this->assertSame($expected, $test($input)->getProcessedText());
   }
