@@ -4,6 +4,7 @@ namespace Drupal\Tests\media\Kernel;
 
 use Drupal\filter\FilterPluginCollection;
 use Drupal\media\Entity\Media;
+use Drupal\Component\Utility\Html;
 
 /**
  * Tests the media content input filter.
@@ -43,7 +44,13 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
 
     // Create test function.
     $test = function ($input) use ($filter) {
-      return $filter->process($input, 'und');
+      // Run $input through $filter.
+      $filtered_media = $filter->process($input, 'und')->getProcessedText();
+      // Extract <img /> tag.
+      $dom = Html::load($filtered_media);
+      $img = $dom->getElementsByTagName('img')[0];
+      $filtered_media_img = $dom->saveHTML($img);
+      return $filtered_media_img;
     };
 
     // Create media entity.
@@ -59,15 +66,20 @@ class MediaEmbedFilterTest extends MediaKernelTestBase {
     $renderer = \Drupal::service('renderer');
     $rendered_media = $renderer->renderPlain($build)->__toString();
 
+    // Extract <img /> tag.
+    $dom = Html::load($rendered_media);
+    $img = $dom->getElementsByTagName('img')[0];
+    $rendered_media_img = $dom->saveHTML($img);
+
     // Test filter using data-entity-embed-display attribute.
     $input = '<drupal-entity data-entity-type="media" data-entity-embed-display="view_mode:image.full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
-    $expected = $rendered_media;
-    $this->assertSame($expected, $test($input)->getProcessedText());
+    $expected = $rendered_media_img;
+    $this->assertSame($expected, $test($input));
 
     // Test filter using data-view-mode attribute.
     $input = '<drupal-entity data-entity-type="media" data-view-mode="full" data-entity-uuid="' . $media_uuid . '"></drupal-entity>';
-    $expected = $rendered_media;
-    $this->assertSame($expected, $test($input)->getProcessedText());
+    $expected = $rendered_media_img;
+    $this->assertSame($expected, $test($input));
   }
 
 }
