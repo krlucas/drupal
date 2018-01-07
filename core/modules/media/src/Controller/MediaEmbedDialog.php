@@ -9,7 +9,7 @@ class MediaEmbedDialog extends ControllerBase {
 
   public function form() {
     $entity = Media::create(['bundle' => 'file', 'uid' => 1]);
-    $form = $this->entityFormBuilder()->getForm($entity, 'add_embed');
+    $form = $this->entityFormBuilder()->getForm($entity, 'editor_embed');
     return $form;
   }
 }
