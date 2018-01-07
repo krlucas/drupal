@@ -38,6 +38,7 @@ use Drupal\user\UserInterface;
  *       "add" = "Drupal\media\MediaForm",
  *       "edit" = "Drupal\media\MediaForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
+ *       "add_embed" =  "Drupal\media\Form\MediaFormEmbed",
  *     },
  *     "translation" = "Drupal\content_translation\ContentTranslationHandler",
  *     "views_data" = "Drupal\media\MediaViewsData",
