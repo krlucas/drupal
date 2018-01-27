@@ -31,6 +31,18 @@ class MediaFormEmbed extends MediaForm {
     ];
     $form['#prefix'] = '<div id="media-embed-dialog-form">';
     $form['#suffix'] = '</div>';
+    $input = $form_state->getUserInput();
+    $editor_dom_id = '';
+    if (!empty($input['editor_object'])) {
+      $editor_dom_id = $input['editor_object']['editor-id'];
+    }
+    elseif (!empty($input['editor_dom_id'])) {
+      $editor_dom_id = $input['editor_id'];
+    }
+    $form['editor_dom_id'] = [
+      '#type' => 'hidden',
+      '#value' => $editor_dom_id,
+    ];
     return $form;
   }
 

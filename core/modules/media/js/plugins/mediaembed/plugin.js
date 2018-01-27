@@ -39,6 +39,7 @@
           var existingElement = getSelectedEmbeddedEntity(editor);
 
           var existingValues = {};
+          existingValues['editor-id'] = editor.element.getId();
           if (existingElement && existingElement.$ && existingElement.$.firstChild) {
             var embedDOMElement = existingElement.$.firstChild;
             // Populate array with the entity's current attributes.
