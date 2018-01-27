@@ -19,3 +19,13 @@ entity.media.revision:
   requirements:
     _access_media_revision: 'view'
     media: \d+
+
+media.embed_dialog:
+  path: '/media/dialog/{editor}/{media_type}'
+  defaults:
+    _controller: '\Drupal\media\Controller\MediaEmbedDialog::form'
+    _title: 'Embed entity'
+  requirements:
+    _permission: 'update any media'
+  options:
+    _theme: ajax_base_page

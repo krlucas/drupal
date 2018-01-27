@@ -44,6 +44,9 @@ function media_theme() {
     'media' => [
       'render element' => 'elements',
     ],
+    'media_embed' => [
+      'render element' => 'element',
+    ],
   ];
 }
 
@@ -115,3 +118,19 @@ function media_field_ui_preconfigured_options_alter(array &$options, $field_type
     $options['media']['entity_view_display']['type'] = 'entity_reference_entity_view';
   }
 }
+
+/**
+ * Prepares variables for the media embed template.
+ *
+ * Default template: media-embed.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element.
+ *     Properties used: #attributes, #children.
+ */
+ function template_preprocess_media_embed(&$variables) {
+   $variables['element'] += ['#attributes' => []];
+   $variables['attributes'] = $variables['element']['#attributes'];
+   $variables['children'] = $variables['element']['#children'];
+ }
