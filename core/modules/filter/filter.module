@@ -74,7 +74,10 @@ function filter_theme() {
         'caption' => NULL,
         'classes' => NULL,
       ],
-    ]
+    ],
+    'entity_embed' => [
+      'render element' => 'element',
+    ],
   ];
 }
 
@@ -439,6 +442,22 @@ function template_preprocess_filter_tips(&$variables) {
   }
 
   $variables['multiple'] = count($tips) > 1;
+}
+
+/**
+ * Prepares variables for the entity embed template.
+ *
+ * Default template: entity-embed.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element.
+ *     Properties used: #attributes, #children.
+ */
+function template_preprocess_entity_embed(array &$variables) {
+  $variables['element'] += ['#attributes' => []];
+  $variables['attributes'] = $variables['element']['#attributes'];
+  $variables['children'] = $variables['element']['#children'];
 }
 
 /**
